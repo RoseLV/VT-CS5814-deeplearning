@@ -1,3 +1,9 @@
+Current folder has:
+- nnunet result summary json file
+- resnet preprocessing and training files;
+- sam training and predicting files
+All files and predcition result images, and models, and checkpoints(large files) are available at: https://virginiatech-my.sharepoint.com/:f:/g/personal/ran22_vt_edu/EhyHz95Y4_hGlKvhzvFOe9sBZ-zUtiGTLWY84pqZ_P5t4Q?e=kpIoOM
+
 /
 │
 ├── /deeplearning                            # This folder contains nnUNet, ResNet, datasets, and EDA files.                          
@@ -27,5 +33,5 @@
     ├── annotation_white_label.png           # Tumor label visualization                                                           
     ├── prediction_all.py                    # Fine-tuned model prediction script                                                  
     └── train.py                             # Fine-tune training script                                                           
-        ...other SAM files downloaded from:                                                                                        
-        https://github.com/facebookresearch/sam2                                                                                  
+        ...other SAM files downloaded from: https://github.com/facebookresearch/sam2                                                           
+        
