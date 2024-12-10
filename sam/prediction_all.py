@@ -33,16 +33,16 @@ def calculate_iou(pred_mask, true_mask):
 def process_image(image_path, mask_path, predictor, num_samples, output_dir):
     image, mask = read_image(image_path, mask_path)
 
-    # 检查 mask 是否为空
+    # Check if mask is empty
     if mask.sum() == 0:
-        print(f"跳过 {os.path.basename(image_path)}：mask 为空。")
+        print(f"Skipping {os.path.basename(image_path)}: mask is empty.")
         return
 
     input_points = get_points(mask, num_samples)
 
-    # 如果没有采样到点，则跳过该图像
+    # Skip the image if no points are sampled
     if input_points.size == 0:
-        print(f"跳过 {os.path.basename(image_path)}：未从 mask 中采样到点。")
+        print(f"Skipping {os.path.basename(image_path)}: no points sampled from the mask.")
         return
 
     image = np.ascontiguousarray(image)
@@ -78,57 +78,57 @@ def process_image(image_path, mask_path, predictor, num_samples, output_dir):
     pred_mask = (cv2.imread(annotation_path, 0) > 0).astype(np.uint8)
     true_mask = (cv2.imread(mask_path, 0) > 0).astype(np.uint8)
     iou_score = calculate_iou(pred_mask, true_mask)
-    print(f"处理完成 {os.path.basename(image_path)}：IOU = {iou_score:.4f}")
+    print(f"Processing complete {os.path.basename(image_path)}: IOU = {iou_score:.4f}")
 
 
 def main(image_dir, mask_dir, output_dir, sam2_checkpoint, model_cfg, num_samples):
-    # 创建输出目录
+    # Create output directory
     os.makedirs(output_dir, exist_ok=True)
 
-    # 获取所有图片和 mask 文件的路径
+    # Get paths of all image and mask files
     image_paths = sorted([os.path.join(image_dir, f) for f in os.listdir(image_dir) if f.endswith('.tif')])
     mask_paths = sorted([os.path.join(mask_dir, f) for f in os.listdir(mask_dir) if f.endswith('.tif')])
 
-    # 确保图片和 mask 数量一致
+    # Ensure the number of images and masks match
     if len(image_paths) != len(mask_paths):
         raise ValueError("Image and mask directories must contain the same number of files.")
 
-    # 初始化模型
+    # Initialize the model
     sam2_model = build_sam2(model_cfg, sam2_checkpoint, device="cuda")
     predictor = SAM2ImagePredictor(sam2_model)
     predictor.model.load_state_dict(torch.load("model.torch"))
 
-    # 日志文件路径
+    # Log file path
     log_path = os.path.join(output_dir, "process_log.txt")
-    iou_values = []  # 保存所有图像的 IOU 值
+    iou_values = []  # Save IOU values for all images
 
     with open(log_path, "w") as log_file:
         for image_path, mask_path in zip(image_paths, mask_paths):
             try:
-                # 处理单张图片
+                # Process a single image
                 image_name = os.path.basename(image_path)
                 process_image(image_path, mask_path, predictor, num_samples, output_dir)
 
-                # 加载保存的预测 mask 和真实 mask
+                # Load saved prediction mask and ground truth mask
                 annotation_path = os.path.join(output_dir, image_name.replace(".tif", "_annotation.tif"))
                 pred_mask = (cv2.imread(annotation_path, 0) > 0).astype(np.uint8)
                 true_mask = (cv2.imread(mask_path, 0) > 0).astype(np.uint8)
 
-                # 计算 IOU
+                # Calculate IOU
                 iou_score = calculate_iou(pred_mask, true_mask)
                 iou_values.append(iou_score)
 
-                # 记录日志
+                # Log results
                 log_message = f"{image_name}: IOU = {iou_score:.4f}\n"
-                print(log_message.strip())  # 打印到控制台
-                log_file.write(log_message)  # 写入日志文件
+                print(log_message.strip())  # Print to console
+                log_file.write(log_message)  # Write to log file
 
             except Exception as e:
                 error_message = f"Error processing {image_path}: {str(e)}\n"
                 print(error_message.strip())
                 log_file.write(error_message)
 
-    # 计算平均 IOU
+    # Calculate average IOU
     if iou_values:
         average_iou = np.mean(iou_values)
         print(f"Average IOU: {average_iou:.4f}")
