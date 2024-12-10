@@ -1,8 +1,8 @@
 /
 │
-├── /deeplearning                           # This folder contains nnunet, resnet, and dataset, and data eda files.
-│   ├── /Datasets                      # dataset
-│   │   ├── /imagesTrRgb               # training images
+├── /deeplearning                           # This folder contains nnunet, resnet, and dataset, and data eda files.                                                                                         
+│   ├── /Datasets                      # dataset                                                                                                                                                            
+│   │   ├── /imagesTrRgb               # training images                                                                                                                                                            
 │   │   ├── /imagesTs                  # test image
 │   │   ├── /labelsTr                  # training labels
 │   │   ├── /labelsTs                  # test labels
