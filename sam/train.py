@@ -1,12 +1,4 @@
-import numpy as np
-import torch
-import cv2
-import os
-from sam2.build_sam import build_sam2
-from sam2.sam2_image_predictor import SAM2ImagePredictor
-import matplotlib.pyplot as plt
-
-# 初始化损失历史
+# Initialize loss history
 loss_history = []
 val_loss_history = []
 val_iou_history = []
@@ -74,20 +66,20 @@ def read_batch(data, num_points=10):
     ann_map = cv2.imread(ent["annotation"], cv2.IMREAD_GRAYSCALE)
     ann_map = (ann_map > 0).astype(np.uint8)
 
-    inds = np.unique(ann_map)[1:]  # 获取所有有效的掩膜区域索引（排除背景）
+    inds = np.unique(ann_map)[1:]  # Get all valid mask region indices (excluding the background)
     points = []
     masks = []
 
     for ind in inds:
-        mask = (ann_map == ind).astype(np.uint8)  # 当前掩膜区域
+        mask = (ann_map == ind).astype(np.uint8)  # Current mask region
         masks.append(mask)
 
-        coords = np.argwhere(mask > 0)  # 获取该掩膜区域的所有像素坐标
-        sampled_indices = np.random.choice(len(coords), min(num_points, len(coords)), replace=False)  # 随机采样点
-        sampled_coords = coords[sampled_indices]  # 获取采样坐标
+        coords = np.argwhere(mask > 0)  # Get all pixel coordinates of the mask region
+        sampled_indices = np.random.choice(len(coords), min(num_points, len(coords)), replace=False)  # Randomly sample points
+        sampled_coords = coords[sampled_indices]  # Get sampled coordinates
 
         for yx in sampled_coords:
-            points.append([[yx[1], yx[0]]])  # 转换为 (x, y) 格式
+            points.append([[yx[1], yx[0]]])  # Convert to (x, y) format
 
     return Img, np.array(masks), np.array(points), np.ones([len(points), 1])
 
@@ -106,10 +98,10 @@ mean_iou = 0
 
 plt.figure(figsize=(10, 6))
 
-# Early Stopping 参数
-early_stop_patience = 20  # 连续多少次验证损失上涨后停止训练
-early_stop_counter = 0    # 连续验证损失上涨的次数
-best_val_loss = float('inf')  # 初始最优验证损失
+# Early Stopping Parameters
+early_stop_patience = 20  # Stop training after consecutive validation loss increases
+early_stop_counter = 0    # Number of consecutive validation loss increases
+best_val_loss = float('inf')  # Initial best validation loss
 
 # Training loop
 for itr in range(100000):
@@ -118,7 +110,7 @@ for itr in range(100000):
         print(f"Number of points sampled: {len(input_point)}")
         if mask.shape[0] == 0:
             continue
-        image = image.copy()  # 确保数组是内存连续的
+        image = image.copy()  # Ensure the array is memory-contiguous
         predictor.set_image(image)
 
         mask_input, unnorm_coords, labels, unnorm_box = predictor._prep_prompts(
@@ -154,7 +146,7 @@ for itr in range(100000):
         scaler.update()
 
         loss_history.append(loss.item())
-    # 每1000次保存模型（如果满足条件）
+    # Save the model every 1000 iterations (if conditions are met)
     if itr % 1000 == 0 and should_save_model:
         torch.save(predictor.model.state_dict(), "model.torch")
         print("Model saved.")
